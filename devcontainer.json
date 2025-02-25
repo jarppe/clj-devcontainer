@@ -1,0 +1,18 @@
+{
+  "name": "clj-devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/root/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "betterthantomorrow.calva",
+        "aaron-bond.better-comments",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "TomPollak.lazygit-vscode",
+        "mtxr.sqltools"
+      ]
+    }
+  }
+}

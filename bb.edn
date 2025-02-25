@@ -1,0 +1,73 @@
+{:tasks {:requires   ([clojure.string :as str]
+                      [clojure.java.io :as io]
+                      [babashka.process :as p]
+                      [babashka.fs :as fs])
+
+         :init       (do (def devcontainer-image       "jarppe/clj-devcontainer")
+                         (def devcontainer-image-dev    (str devcontainer-image ":dev"))
+                         (def devcontainer-image-latest (str devcontainer-image ":latest")))
+
+         ;;
+         ;; =================================================================================
+         ;; Build local testing image:
+         ;; =================================================================================
+         ;;
+
+         dev:build   {:doc  "Build image for local testing"
+                      :task (p/exec "devcontainer build"
+                                    "--workspace-folder" "."
+                                    "--config"     "devcontainer.json"
+                                    "--image-name" devcontainer-image-dev
+                                    ".")}
+
+         dev:sh      {:doc  "Run local test image"
+                      :task (apply p/exec "docker run"
+                                   "--interactive"
+                                   "--tty"
+                                   devcontainer-image-dev
+                                   *command-line-args*)}
+
+         ;;
+         ;; =================================================================================
+         ;; Build distribution image:
+         ;; =================================================================================
+         ;;
+
+         dist:build  {:doc  "Build release image"
+                      :task (p/shell "devcontainer build"
+                                     "--workspace-folder" "."
+                                     "--config"     "devcontainer.json"
+                                     "--platform"   "linux/arm64,linux/amd64"
+                                     "--image-name" devcontainer-image-latest
+                                     ".")}
+
+         dist:push   {:doc  "Build and push image"
+                      :task (do (run 'dist:build)
+                                (p/exec "docker push" devcontainer-image-latest))}
+
+
+         ;;
+         ;; =================================================================================
+         ;; Deploy to cluster:
+         ;; =================================================================================
+         ;;
+
+         kube:apply  {:doc  "Deploy to cluster"
+                      :task (do (when-not (-> "./.secrets/id_ed25519" (io/file) (.canRead))
+                                  (println "error: Cant find SSH keys.")
+                                  (println "       Copy the SSH key pair you use with git to ./secrets directory")
+                                  (System/exit 1))
+                                (p/shell "kubectl apply -k ."))}
+
+         kube:ps     {:doc  "List devcontainer pods"
+                      :task (p/shell "kubectl get pods --selector devcontainer,programmer=jarppe")}
+
+         kube:sh     {:doc  "Open bash sell in devcontainer pod"
+                      :task (p/exec "kubectl exec -it --container=app jarppe-devcontainer-pod -- bash")}
+
+         kube:stop   {:doc  "Stop the devcontainer pod in kube cluster"
+                      :task (p/exec "kubectl delete pod jarppe-devcontainer-pod")}
+
+         kube:delete {:doc  "Stop the devcontainer pod in kube cluster"
+                      :task (p/exec "kubectl delete -k .")}}}
+     

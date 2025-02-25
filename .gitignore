@@ -1,0 +1,17 @@
+*
+
+!/deploy
+!/deploy/**
+!/dotfiles
+!/dotfiles/**
+!/.cljfmt.edn
+!/.dockerignore
+!/.envrc
+!/.gitignore
+!/bb.edn
+!/devcontainer*.json
+!/devcontainer*.yml
+!/docker-compose.yml
+!/Dockerfile
+!/kustomization.yaml
+!/README.md

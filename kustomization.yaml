@@ -1,0 +1,27 @@
+namespace: jarppe-test
+namePrefix: jarppe-devcontainer-
+
+labels:
+  - pairs:
+      app:          jarppe-devcontainer
+      devcontainer: jarppe
+      programmer:   jarppe
+    includeSelectors: true
+    
+secretGenerator:
+- name: ssh-secrets
+  files:
+  - id_ed25519=./.secrets/id_ed25519
+  - id_ed25519.pub=./.secrets/id_ed25519.pub
+  type: "generic"
+
+configMapGenerator:
+- name: user-env
+  files:
+  - .envrc
+
+resources:
+- deploy/pvc.yaml
+- deploy/crb.yaml
+- deploy/sa.yaml
+- deploy/devcontainer.yaml
