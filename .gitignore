@@ -4,13 +4,14 @@
 !/deploy/**
 !/dotfiles
 !/dotfiles/**
+!/install-scripts
+!/install-scripts/**
 !/.cljfmt.edn
 !/.dockerignore
-!/.envrc
 !/.gitignore
 !/bb.edn
+!/devc.bb
 !/devcontainer*.json
-!/devcontainer*.yml
 !/docker-compose.yml
 !/Dockerfile
 !/kustomization.yaml

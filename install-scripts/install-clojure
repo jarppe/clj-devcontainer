@@ -1,0 +1,16 @@
+#!/bin/bash
+
+RELEASE=$1
+if [[ -z "${RELEASE}" ]]; then
+  RELEASE=$(curl -sSLf "https://api.github.com/repos/clojure/brew-install/releases/latest" | jq -r ".tag_name")
+fi
+
+echo "Installing Clojure ${RELEASE}..."
+
+sudo apt install -y rlwrap
+
+curl -sSLf https://github.com/clojure/brew-install/releases/download/${RELEASE}/posix-install.sh \
+  | sudo bash -
+
+clojure -P
+clojure --version

@@ -1,14 +1,12 @@
 ---
 services:
   devcontainer:
-    image: jarppe/clj-devcontainer:local
+    image: jarppe/clj-devcontainer:dev
+    command: "sleep infinity"
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.kube:/root/.kube:ro
-      - .:/root/workspace
+      - ~/.kube:/home/${USER}/.kube:ro
+      - .:/home/${USER}/workspace
     environment:
       - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
-      - KUBE_CONTEXT=docker
-      - KUBE_NAMESPACE=docker
-    command: "sleep infinity"

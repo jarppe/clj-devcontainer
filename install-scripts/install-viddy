@@ -1,0 +1,18 @@
+#!/bin/bash
+
+RELEASE=$1
+if [[ -z "${RELEASE}" ]]; then
+  RELEASE=$(curl -sSLf "https://api.github.com/repos/sachaos/viddy/releases/latest" | jq -r ".tag_name")
+fi
+
+echo "Installing Viddy ${RELEASE}..."
+
+case $(uname -m) in
+  aarch64) ARCH=arm64;;
+  x86_64)  ARCH=x86_64;;
+esac
+
+mkdir -p $HOME/.local/bin
+
+curl -sSLf "https://github.com/sachaos/viddy/releases/download/${RELEASE}/viddy-${RELEASE}-linux-${ARCH}.tar.gz" \
+  | tar -C $HOME/.local/bin -xzf - viddy

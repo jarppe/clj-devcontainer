@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod
+  name: dev
 spec:
   containers:
     - name:  app
@@ -33,7 +33,7 @@ spec:
       volumeMounts:
         - name:      persistent-storage
           subPath:   workspace
-          mountPath: /workspace
+          mountPath: /root/workspace
         - name:      persistent-storage
           subPath:   vscode-cache
           mountPath: /root/.vscode-server

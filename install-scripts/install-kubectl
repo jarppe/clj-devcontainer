@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# kubectl:
+
+RELEASE=$(curl -sSLf https://dl.k8s.io/release/stable.txt)
+ARCH=$(dpkg --print-architecture)
+
+mkdir -p $HOME/.local/bin
+
+curl -sSLf "https://dl.k8s.io/release/${RELEASE}/bin/linux/${ARCH}/kubectl" \
+     > $HOME/.local/bin/kubectl
+chmod 0755 $HOME/.local/bin/kubectl
