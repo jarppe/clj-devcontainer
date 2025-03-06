@@ -60,9 +60,7 @@ RUN \
            --home-dir /home/${USER}                                                \
            --shell /bin/zsh                                                        \
            ${USER}                                                                 && \
-  cat /etc/sudoers                                                                 \
-    | sed -e 's/%sudo.*/%sudo ALL=(ALL:ALL) NOPASSWD:ALL/'                         \
-    > /etc/sudoers
+  echo "%sudo ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 COPY  --chown=1000:1000   dotfiles/*          /home/${USER}
 COPY  --chown=1000:1000   install-scripts/*   /home/${USER}/.local/bin/
@@ -71,15 +69,10 @@ WORKDIR /home/${USER}
 USER ${USER}
 ENV HOME=/home/${USER}
 
-ENTRYPOINT ["/tini", "--"]
-CMD ["/bin/zsh"]
-
-FROM base AS clj
-
-ARG TARGETARCH
-ARG USER
-
 RUN \
   PATH=$PATH:/home/${USER}/.local/bin/    && \
   install-java                            && \
   install-clojure
+
+ENTRYPOINT ["/tini", "--"]
+CMD ["/bin/zsh"]

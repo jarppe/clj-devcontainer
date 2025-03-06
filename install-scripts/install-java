@@ -10,7 +10,7 @@ echo "Installing Java $JAVA_VERSION..."
 curl -sSLf https://packages.adoptium.net/artifactory/api/gpg/key/public \
   | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/temurin.gpg
 
-printf "deb https://packages.adoptium.net/artifactory/deb %s main\n" $(lsb_release -cs) \
+echo "deb https://packages.adoptium.net/artifactory/deb" $(lsb_release -cs) "main"  \
   | sudo tee /etc/apt/sources.list.d/adoptium.list
 
 sudo apt update -q

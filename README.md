@@ -2,7 +2,9 @@
 
 This repository builds a [devcontainer](https://containers.dev/) image for [Clojure](https://clojure.org/) development. The image contains recent Java (currently Java 23) and Clojure command-line tools from most recent release.
 
-The image also contains helper scripts to install most commonly used tools, like:
+The image tag is `jarppe/clj-devcontainer:latest` and is built for `linux/arm64` and `linux/adm64` targets.
+
+To keep the image size in reasonable small, the image does not contain all tools I use. Instead the image has installation scripts to install the tools, like:
 
 - Babashka
 - Docker CLI
@@ -11,6 +13,12 @@ The image also contains helper scripts to install most commonly used tools, like
 - PostgreSQL CLI (version 17)
 - Redis CLI
 - K6
+
+For example, to install postgres CLI, run this in devcontainer shell:
+
+```bash
+$ install-postgres-cli
+```
 
 ## Kubernetes helper
 
