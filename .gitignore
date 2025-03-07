@@ -10,7 +10,7 @@
 !/.dockerignore
 !/.gitignore
 !/bb.edn
-!/devc.bb
+!/devc
 !/devcontainer*.json
 !/docker-compose.yml
 !/Dockerfile
