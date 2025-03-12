@@ -25,7 +25,7 @@ $ install-postgres-cli
 The [devc](./devc) helper is a Babashka script that helps working with devcontainers in Kubernetes.
 
 ```bash
-$ ./devc
+$ ./devc -h
 usage: devc <command> <pod-name> <args>
 command:
   up      Start devcontainer
@@ -35,10 +35,12 @@ command:
 pod-name:
   Name of the devcontainer pod, defaults to "jarppe"
 args:
-  -h, --help      Show usage
-  -n, --namespace Kube namespace (default = current namespace)
-  -c, --context   Kube context (default = current context)
-  -i, --image     Devcontainer image, used by "up" (default = jarppe/clj-devcontainer:latest)
+  -h,   --help                                     Show usage
+  -ctx, --context   test:eu-west-1                 Kube context (default from kubectl config)
+  -ns,  --namespace review-4259                    Kube namespace (default from kubectl config)
+  -pod, --pod       jarppe                         Devcontainer pod name ($CLJ_DEVCONTAINER_POD_NAME or username)
+  -c,   --container jarppe                         Container name ($CLJ_DEVCONTAINER_CONTAINER_NAME or pod name)
+  -i,   --image     jarppe/clj-devcontainer:latest Devcontainer image ($CLJ_DEVCONTAINER_IMAGE or "jarppe/clj-devcontainer:latest")
 ```
 
 Create devcontainer using defaults:
@@ -57,7 +59,7 @@ At this point you can open remote devcontainer using your IDE. For example, this
 List devcontainers:
 
 ```bash
-$ ./devc ps
+$ devc ps
 NAME     READY   STATUS    RESTARTS   AGE
 jarppe   1/1     Running   0          16s
 ```
@@ -65,38 +67,44 @@ jarppe   1/1     Running   0          16s
 Open shell in devcontainer:
 
 ```bash
-$ ./devc sh
-~ > whoami
+$ devc sh
+[review-4259/jarppe] ~
+> whoami
 jarppe
-~ > uname -a
+[review-4259/jarppe] ~
+> uname -a
 Linux jarppe 6.12.5-linuxkit #1 SMP Tue Jan 21 10:23:32 UTC 2025 aarch64 GNU/Linux
-~ > java -version
+[review-4259/jarppe] ~
+> java -version
 openjdk version "23.0.2" 2025-01-21
 OpenJDK Runtime Environment Temurin-23.0.2+7 (build 23.0.2+7)
 OpenJDK 64-Bit Server VM Temurin-23.0.2+7 (build 23.0.2+7, mixed mode, sharing)
-~ > clj --version
+[review-4259/jarppe] ~
+> clj --version
 Clojure CLI version 1.12.0.1530
-~ > ^D
+[review-4259/jarppe] ~
+> ^D
 ```
 
 Execute command on devcontainer:
 
 ```bash
-$ ./devc sh jarppe ps aux
+$ devc sh ps aux
 USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
 jarppe       1  0.0  0.0   2204  1004 ?        Ss   17:56   0:00 /tini -- sleep infinity
 jarppe       6  0.0  0.0   2220  1148 ?        S    17:56   0:00 sleep infinity
-jarppe      69  0.0  0.0   8044  3812 ?        Rs   17:58   0:00 ps aux
+jarppe       8  0.0  0.0   6156  4864 pts/0    Ss+  17:56   0:00 zsh -l
+jarppe      69  0.0  0.0   8044  3812 ?        Rs   18:02   0:00 ps aux
 ```
 
 Stop devcontainer:
 
 ```bash
-$ ./devc down
+$ devc down
 pod "jarppe" deleted
 ```
 
-## Setup
+## Build
 
 To build this image yourself you need:
 

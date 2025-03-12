@@ -1,10 +1,7 @@
 #!/usr/bin/env bb
 (ns devc
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]
-            [babashka.cli :as cli]
-            [babashka.process :as p]
-            [babashka.fs :as fs]))
+  (:require [babashka.cli :as cli]
+            [babashka.process :as p]))
 
 
 ;; Set to true, when *not* in repl
@@ -17,21 +14,36 @@
     (println (str "(System/exit " exit-code ")"))))
 
 
-(def user          (System/getenv "USER"))
-(def labels        (str "app=devcontainer,user=" user))
-(def default-image "jarppe/clj-devcontainer:latest")
+(def user               (System/getenv "USER"))
+(def labels             (str "app=devcontainer,user=" user))
 
+
+(def default-opts {:context   (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out)
+                   :namespace (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}'") :out)
+                   :image     (or (System/getenv "CLJ_DEVCONTAINER_IMAGE")
+                                  "jarppe/clj-devcontainer:latest")
+                   :pod       (or (System/getenv "CLJ_DEVCONTAINER_POD_NAME")
+                                  user)
+                   :container (System/getenv "CLJ_DEVCONTAINER_CONTAINER_NAME")})
 
 (def cli-spec
   {:spec     {:help      {:desc  "Show usage"
                           :alias :h}
-              :namespace {:desc  "Kube namespace (default = current namespace)"
-                          :alias :n}
-              :context   {:desc  "Kube context (default = current context)"
-                          :alias :c}
-              :image     {:desc   (str "Devcontainer image, used by \"up\" (default = " default-image ")")
-                          :coerce :string
-                          :alias  :i}}
+              :context   {:desc    "Kube context (default from kubectl config)"
+                          :alias   :ctx
+                          :default (:context default-opts)}
+              :namespace {:desc    "Kube namespace (default from kubectl config)"
+                          :alias   :ns
+                          :default (:namespace default-opts)}
+              :pod       {:desc    "Devcontainer pod name ($CLJ_DEVCONTAINER_POD_NAME or username)"
+                          :alias   :pod
+                          :default (:pod default-opts)}
+              :container {:desc    "Container name ($CLJ_DEVCONTAINER_CONTAINER_NAME or pod name)"
+                          :alias   :c}
+              :image     {:desc    "Devcontainer image ($CLJ_DEVCONTAINER_IMAGE or \"jarppe/clj-devcontainer:latest\")"
+                          :coerce  :string
+                          :alias   :i
+                          :default (:image default-opts)}}
    :error-fn (fn [_]
                (println "error: invalid command")
                (println "try: --help")
@@ -68,12 +80,15 @@
       (exit)))
 
 
-(defn up [{:keys [opts args]}]
-  (kubectl "run" [(or (first args) user)
-                  (when-let [context (:context opts)] (str "--context=" context))
-                  (when-let [namespace (:namespace opts)] (str "--namespace=" namespace))
-                  (str "--image=" (or (:image opts) default-image))
+(defn up [{:keys [opts]}]
+  (kubectl "run" [(:pod opts)
+                  (str "--context=" (:context opts))
+                  (str "--namespace=" (:namespace opts))
+                  (str "--image=" (:image opts))
                   (str "--labels=" labels)
+                  (str "--env=CONTEXT=" (:context opts))
+                  (str "--env=NAMESPACE=" (:namespace opts))
+                  (str "--env=POD_NAME=" (:pod opts))
                   "--restart=Never"
                   "--"
                   "sleep" "infinity"]))
@@ -82,29 +97,27 @@
 (defn down [{:keys [opts args]}]
   (kubectl "delete" ["pod"
                      (or (first args)
-                         "--selector=app=devcontainer")
-                     (when-let [context (:context opts)] (str "--context=" context))
-                     (when-let [namespace (:namespace opts)] (str "--namespace=" namespace))]))
+                         (str "--selector=" labels))
+                     (str "--context=" (:context opts))
+                     (str "--namespace=" (:namespace opts))]))
 
   
 (defn ps [{:keys [opts args]}]
   (kubectl "get" ["pod"
                   (or (first args)
-                      "--selector=app=devcontainer")
-                  (when-let [context (:context opts)] (str "--context=" context))
-                  (when-let [namespace (:namespace opts)] (str "--namespace=" namespace))]))
+                      (str "--selector=" labels))
+                  (str "--context=" (:context opts))
+                  (str "--namespace=" (:namespace opts))]))
 
 
-(defn sh [{:keys [opts args]}]
-  (let [podname (or (first args) user)
-        args    (next args)]
-    (kubectl "exec" [podname
-                     (when-let [context (:context opts)] (str "--context=" context))
-                     (when-let [namespace (:namespace opts)] (str "--namespace=" namespace))
-                     (str "--container=" podname) ;; The kubectl run does not allow specifying container name
-                     (when-not args ["--stdin" "--tty"])
-                     "--"
-                     (or args ["zsh" "-l"])])))
+(defn sh [{:keys [opts args]}] 
+  (kubectl "exec" [(:pod opts)
+                   (str "--context=" (:context opts))
+                   (str "--namespace=" (:namespace opts))
+                   (str "--container=" (or (:container opts) (:pod opts)))
+                   (when-not args ["--stdin" "--tty"])
+                   "--"
+                   (or args ["zsh" "-l"])]))
 
 
 (def table
@@ -122,7 +135,8 @@
 
 (defn main [args]
   (let [opts (-> (cli/dispatch table args cli-spec)
-                 (assoc :spec cli-spec))]
+                 (assoc :spec cli-spec)
+                 (update :opts (partial merge-with (fn [a _] a)) default-opts))]
     (when (#{:h :help} opts)
       (help opts)
       (exit 0))
