@@ -1,5 +1,7 @@
 *
 
+!/.github
+!/.github/**
 !/deploy
 !/deploy/**
 !/dotfiles

@@ -14,8 +14,8 @@
     (println (str "(System/exit " exit-code ")"))))
 
 
-(def user               (System/getenv "USER"))
-(def labels             (str "app=devcontainer,user=" user))
+(def user   (System/getenv "USER"))
+(def labels (str "app=devcontainer,user=" user))
 
 
 (def default-opts {:context   (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out)

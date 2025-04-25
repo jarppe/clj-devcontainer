@@ -14,11 +14,15 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "docker.docker",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
         "betterthantomorrow.calva",
+        "ecmel.vscode-html-css",
         "aaron-bond.better-comments",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "TomPollak.lazygit-vscode",
-        "mtxr.sqltools"
+        "reduckted.vscode-gitweblinks"
       ]
     }
   }
