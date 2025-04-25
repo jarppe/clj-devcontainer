@@ -3,7 +3,7 @@ name: build-and-push
 on:
   push:
     branches:
-      - release
+      - main
 
 env:
   GHR_TAG: jarppe/clj-devcontainer:latest
