@@ -9,11 +9,11 @@
 !/install-scripts
 !/install-scripts/**
 !/.cljfmt.edn
+!/.devcontainer.json
 !/.dockerignore
 !/.gitignore
 !/bb.edn
 !/devc
-!/devcontainer*.json
 !/docker-compose.yml
 !/Dockerfile
 !/kustomization.yaml
