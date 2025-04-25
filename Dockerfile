@@ -1,7 +1,6 @@
 FROM debian:12-slim AS base
 
 ARG TARGETARCH
-ARG USER
 
 RUN \
   apt update -q                                                                    && \
@@ -41,6 +40,8 @@ RUN \
 #
 # User:
 #
+
+ARG USER=jarppe
 
 RUN \
   groupadd --gid 1000 ${USER}                                                      && \
