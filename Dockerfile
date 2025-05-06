@@ -41,7 +41,7 @@ RUN \
 # User:
 #
 
-ARG USER=jarppe
+ARG USER=dev
 
 RUN \
   groupadd --gid 1000 ${USER}                                                      && \
@@ -120,6 +120,14 @@ RUN \
   RELEASE=$(curl -sSLf "https://api.github.com/repos/junegunn/fzf/releases/latest" | jq -r ".tag_name[1:]") && \
   curl -sSLf "https://github.com/junegunn/fzf/releases/download/v${RELEASE}/fzf-${RELEASE}-linux_${TARGETARCH}.tar.gz" \
     | tar -C /usr/local/bin -xzf - fzf
+
+#
+# Misc utils:
+#
+
+RUN \
+  apt install -y                                                                   \
+    silversearcher-ag
 
 #
 # Workspace:

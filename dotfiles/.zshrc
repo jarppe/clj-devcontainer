@@ -84,3 +84,4 @@ alias k=kubectl
 alias d=docker
 alias dc='docker compose'
 alias lg=lazygit
+alias agc='ag -U --clojure'

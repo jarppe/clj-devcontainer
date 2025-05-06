@@ -6,11 +6,11 @@
       "target": "clj"
     },
     "args": {
-      "USER": "${localEnv:USER}"
+      "USER": "dev"
     }
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/${localEnv:USER}/workspace,type=bind,consistency=cached",
-  "workspaceFolder": "/home/${localEnv:USER}/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/dev/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/home/dev/workspace",
   "customizations": {
     "vscode": {
       "extensions": [
