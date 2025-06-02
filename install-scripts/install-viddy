@@ -12,7 +12,5 @@ case $(uname -m) in
   x86_64)  ARCH=x86_64;;
 esac
 
-mkdir -p $HOME/.local/bin
-
 curl -sSLf "https://github.com/sachaos/viddy/releases/download/${RELEASE}/viddy-${RELEASE}-linux-${ARCH}.tar.gz" \
-  | tar -C $HOME/.local/bin -xzf - viddy
+  | tar -C /usr/local/bin -xzf - viddy

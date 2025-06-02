@@ -9,7 +9,5 @@ case $(uname -m) in
   x86_64)  ARCH=x86_64;;
 esac
 
-mkdir -p $HOME/.local/bin
-
 curl -sSLf "https://github.com/jesseduffield/lazygit/releases/download/v${RELEASE}/lazygit_${RELEASE}_Linux_${ARCH}.tar.gz" \
-  | tar -C $HOME/.local/bin -xzf - lazygit
+  | tar -C /usr/local/bin -xzf - lazygit

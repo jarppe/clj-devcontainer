@@ -46,7 +46,7 @@
                           :default (:image default-opts)}}
    :error-fn (fn [_]
                (println "error: invalid command")
-               (println "try: --help")
+               (println "try: devc --help")
                (exit 1))})
 
 

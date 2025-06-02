@@ -11,12 +11,14 @@ autoload -U colors && colors
 eval "$(direnv hook zsh)"
 
 #
-# fzf
+# fzf:
 #
 
 source <(fzf --zsh)
 
-# -- Use fd instead of find --
+#
+# fd:
+#
 
 export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -65,12 +67,6 @@ elif [[ -n $SSH_CONNECTION ]]; then
 else
   export PS1="%{$fg[yellow]%}%~%{$reset_color%} > "
 fi
-
-#
-# Installation helpers:
-#
-
-export PATH=$PATH:$HOME/.local/bin
 
 #
 # Common aliases:

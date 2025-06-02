@@ -37,8 +37,8 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           configFile: ./.devcontainer.json
-          imageName: jarppe/clj-devcontainer
-          imageTag: latest
-          cacheFrom: jarppe/clj-devcontainer:latest
-          push: always
-          platform: linux/amd64,linux/arm64
+          imageName:  jarppe/clj-devcontainer
+          imageTag:   latest
+          cacheFrom:  jarppe/clj-devcontainer:latest
+          platform:   linux/amd64,linux/arm64
+          push:       always

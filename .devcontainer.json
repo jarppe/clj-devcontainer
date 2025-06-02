@@ -1,16 +1,10 @@
 {
   "name": "clj-devcontainer",
   "build": {
-    "dockerfile": "Dockerfile",
-    "build": {
-      "target": "clj"
-    },
-    "args": {
-      "USER": "dev"
-    }
+    "dockerfile": "Dockerfile"
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/dev/workspace,type=bind,consistency=cached",
-  "workspaceFolder": "/home/dev/workspace",
+  "workspaceFolder": "/root/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/root/workspace,type=bind,consistency=cached",
   "customizations": {
     "vscode": {
       "extensions": [

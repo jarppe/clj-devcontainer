@@ -12,15 +12,13 @@
          ;; Build local testing image:
          ;; =================================================================================
          ;;
-
+         
          dev:build   {:doc  "Build image for local testing"
-                      :task (let [user (System/getenv "USER")]
-                              (p/exec "devcontainer build"
-                                      "--workspace-folder" "."
-                                      "--config"           "devcontainer.json"
-                                      "--user-data-folder" (str "/home/" user)
-                                      "--image-name"       devcontainer-image-dev
-                                      "."))}
+                      :task (p/exec "devcontainer build"
+                                    "--workspace-folder" "."
+                                    "--config"           ".devcontainer.json" 
+                                    "--image-name"       devcontainer-image-dev
+                                    ".")}
 
          dev:sh      {:doc  "Run local test image"
                       :task (apply p/exec "docker run"
@@ -36,16 +34,14 @@
          ;; Build distribution image:
          ;; =================================================================================
          ;;
-
+         
          dist:build  {:doc  "Build release image"
-                      :task (let [user (System/getenv "USER")]
-                              (p/shell "devcontainer build"
-                                       "--workspace-folder" "."
-                                       "--config"           "devcontainer.json"
-                                       "--user-data-folder" (str "/home/" user)
-                                       "--image-name"       devcontainer-image-latest
-                                       "--platform"        "linux/arm64,linux/amd64"
-                                       "."))}
+                      :task (p/shell "devcontainer build"
+                                     "--workspace-folder" "."
+                                     "--config"           ".devcontainer.json"
+                                     "--image-name"       devcontainer-image-latest
+                                     "--platform"         "linux/arm64,linux/amd64"
+                                     ".")}
 
          dist:push   {:doc  "Build and push image"
                       :task (do (run 'dist:build)
@@ -56,7 +52,7 @@
          ;; Deploy to cluster:
          ;; =================================================================================
          ;;
-
+         
          kube:apply  {:doc  "Deploy to cluster"
                       :task (do (when-not (-> "./.secrets/id_ed25519" (io/file) (.canRead))
                                   (println "error: Cant find SSH keys.")
