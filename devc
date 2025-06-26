@@ -1,7 +1,9 @@
 #!/usr/bin/env bb
 (ns devc
-  (:require [babashka.cli :as cli]
-            [babashka.process :as p]))
+  (:require [clojure.string :as str]
+            [babashka.cli :as cli]
+            [babashka.process :as p]
+            [cheshire.core :as json]))
 
 
 ;; Set to true, when *not* in repl
@@ -18,32 +20,42 @@
 (def labels (str "app=devcontainer,user=" user))
 
 
-(def default-opts {:context   (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out)
-                   :namespace (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}'") :out)
-                   :image     (or (System/getenv "CLJ_DEVCONTAINER_IMAGE")
-                                  "jarppe/clj-devcontainer:latest")
-                   :pod       (or (System/getenv "CLJ_DEVCONTAINER_POD_NAME")
-                                  user)
-                   :container (System/getenv "CLJ_DEVCONTAINER_CONTAINER_NAME")})
+(def default-opts {:context         (or (System/getenv "CLJ_DEVCONTAINER_CONTEXT")   (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out))
+                   :namespace       (or (System/getenv "CLJ_DEVCONTAINER_NAMESPACE") (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}'") :out))
+                   :image           (or (System/getenv "CLJ_DEVCONTAINER_IMAGE")     "jarppe/clj-devcontainer:latest")
+                   :pod             (or (System/getenv "CLJ_DEVCONTAINER_POD_NAME")  user)
+                   :requests-memory (or (System/getenv "CLJ_DEVCONTAINER_REQUESTS_MEMORY") "1Gi")
+                   :requests-cpu    (or (System/getenv "CLJ_DEVCONTAINER_REQUESTS_CPU")    "500m")
+                   :limits-memory   (or (System/getenv "CLJ_DEVCONTAINER_LIMITS_MEMORY")   "4Gi")
+                   :limits-cpu      (or (System/getenv "CLJ_DEVCONTAINER_LIMITS_CPU")      "4000m")})
+
 
 (def cli-spec
-  {:spec     {:help      {:desc  "Show usage"
-                          :alias :h}
-              :context   {:desc    "Kube context (default from kubectl config)"
-                          :alias   :ctx
-                          :default (:context default-opts)}
-              :namespace {:desc    "Kube namespace (default from kubectl config)"
-                          :alias   :ns
-                          :default (:namespace default-opts)}
-              :pod       {:desc    "Devcontainer pod name ($CLJ_DEVCONTAINER_POD_NAME or username)"
-                          :alias   :pod
-                          :default (:pod default-opts)}
-              :container {:desc    "Container name ($CLJ_DEVCONTAINER_CONTAINER_NAME or pod name)"
-                          :alias   :c}
-              :image     {:desc    "Devcontainer image ($CLJ_DEVCONTAINER_IMAGE or \"jarppe/clj-devcontainer:latest\")"
-                          :coerce  :string
-                          :alias   :i
-                          :default (:image default-opts)}}
+  {:spec     {:help            {:desc  "Show usage"
+                                :alias :h}
+              :context         {:desc    "Kube context (default from kubectl config)"
+                                :alias   :ctx
+                                :default (:context default-opts)}
+              :namespace       {:desc    "Kube namespace (default from kubectl config)"
+                                :alias   :ns
+                                :default (:namespace default-opts)}
+              :pod             {:desc    "Devcontainer pod name ($CLJ_DEVCONTAINER_POD_NAME or username)"
+                                :alias   :pod
+                                :default (:pod default-opts)}
+              :image           {:desc    "Devcontainer image ($CLJ_DEVCONTAINER_IMAGE or \"jarppe/clj-devcontainer:latest\")"
+                                :coerce  :string
+                                :alias   :i
+                                :default (:image default-opts)}
+              :volume          {:desc  "Mount volume to devcontainer, i.e. pvc:some-pvc-name:/mnt/data"
+                                :alias :v}
+              :requests-memory {:desc    "Pod memory request"
+                                :default (:requests-memory default-opts)}
+              :requests-cpu    {:desc    "Pod CPU request"
+                                :default (:requests-cpu default-opts)}
+              :limits-memory   {:desc    "Pod memory limit"
+                                :default (:limits-memory default-opts)}
+              :limits-cpu      {:desc    "Pod CPU limit"
+                                :default (:limits-cpu default-opts)}}
    :error-fn (fn [_]
                (println "error: invalid command")
                (println "try: devc --help")
@@ -80,18 +92,45 @@
       (exit)))
 
 
+(defn volume-info [{:keys [volume]}]
+  (when volume
+    (zipmap [:type :name :mount :opts]
+            (str/split volume #":"))))
+
+
 (defn up [{:keys [opts]}]
-  (kubectl "run" [(:pod opts)
-                  (str "--context=" (:context opts))
-                  (str "--namespace=" (:namespace opts))
-                  (str "--image=" (:image opts))
-                  (str "--labels=" labels)
-                  (str "--env=CONTEXT=" (:context opts))
-                  (str "--env=NAMESPACE=" (:namespace opts))
-                  (str "--env=POD_NAME=" (:pod opts))
-                  "--restart=Never"
-                  "--"
-                  "sleep" "infinity"]))
+  (let [volume    (volume-info opts)
+        overrides {:apiVersion "v1"
+                   :spec       {:containers [{:name         (:pod opts)
+                                              :image        (:image opts)
+                                              :command      ["sleep" "infinity"]
+                                              :resources    {:requests {:cpu    (:requests-cpu opts)
+                                                                        :memory (:requests-memory opts)}
+                                                             :limits   {:cpu    (:limits-cpu opts)
+                                                                        :memory (:limits-memory opts)}}
+                                              :env          [{:name  "CONTEXT"
+                                                              :value (:context opts)}
+                                                             {:name  "NAMESPACE"
+                                                              :value (:namespace opts)}
+                                                             {:name  "POD_NAME"
+                                                              :value (:pod opts)}]
+                                              :volumeMounts (when volume
+                                                              [{:name      (:name volume)
+                                                                :mountPath (:mount volume)
+                                                                :readOnly  (if (= (:opts volume) "ro") true false)}])}]
+                                :volumes    (when volume
+                                              (case (:type volume)
+                                                "pvc" [{:name                  (:name volume)
+                                                        :persistentVolumeClaim {:claimName (:name volume)}}]
+                                                (do (println "unknown volume type:" (pr-str (:type volume)))
+                                                    (exit 1))))}}]
+    (kubectl "run" [(:pod opts)
+                    (str "--context=" (:context opts))
+                    (str "--namespace=" (:namespace opts))
+                    (str "--labels=" labels)
+                    (str "--image=" (:image opts))
+                    (str "--overrides=" (json/generate-string overrides))
+                    "--restart=Never"])))
 
 
 (defn down [{:keys [opts args]}]
@@ -113,8 +152,8 @@
 (defn sh [{:keys [opts args]}] 
   (kubectl "exec" [(:pod opts)
                    (str "--context=" (:context opts))
-                   (str "--namespace=" (:namespace opts))
-                   (str "--container=" (or (:container opts) (:pod opts)))
+                   (str "--namespace=" (:namespace opts)) 
+                   (str "--container=" (:pod opts)) 
                    (when-not args ["--stdin" "--tty"])
                    "--"
                    (or args ["zsh" "-l"])]))
