@@ -1,0 +1,16 @@
+#!/bin/bash
+
+RELEASE=$1
+if [[ -z "${RELEASE}" ]]; then
+  RELEASE=$(curl -sSLf "https://api.github.com/repos/grafana/k6/releases/latest" | jq -r ".tag_name")
+fi
+
+echo "Installing K6 ${RELEASE}..."
+
+case $(uname -m) in
+  aarch64) ARCH=arm64;;
+  x86_64)  ARCH=amd64;;
+esac
+
+curl -sSLf "https://github.com/grafana/k6/releases/download/${RELEASE}/k6-${RELEASE}-linux-${ARCH}.tar.gz" \
+  | tar -C /usr/local/bin --strip-components 1 -xzf -
