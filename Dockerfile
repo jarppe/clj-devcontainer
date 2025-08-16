@@ -120,7 +120,7 @@ RUN \
 
 
 RUN \
-  clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"} cider/cider-nrepl {:mvn/version "0.50.2"}}}' -P
+  clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.1"} cider/cider-nrepl {:mvn/version "0.55.4"}}}' -P
 
 
 # In stall dotfiles and installation helpers:
