@@ -20,14 +20,15 @@
 (def labels (str "app=devcontainer,user=" user))
 
 
-(def default-opts {:context         (or (System/getenv "CLJ_DEVCONTAINER_CONTEXT")   (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out))
-                   :namespace       (or (System/getenv "CLJ_DEVCONTAINER_NAMESPACE") (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}'") :out))
-                   :image           (or (System/getenv "CLJ_DEVCONTAINER_IMAGE")     "jarppe/clj-devcontainer:latest")
-                   :pod             (or (System/getenv "CLJ_DEVCONTAINER_POD_NAME")  user)
-                   :requests-memory (or (System/getenv "CLJ_DEVCONTAINER_REQUESTS_MEMORY") "1Gi")
-                   :requests-cpu    (or (System/getenv "CLJ_DEVCONTAINER_REQUESTS_CPU")    "500m")
-                   :limits-memory   (or (System/getenv "CLJ_DEVCONTAINER_LIMITS_MEMORY")   "4Gi")
-                   :limits-cpu      (or (System/getenv "CLJ_DEVCONTAINER_LIMITS_CPU")      "4000m")})
+(def default-opts {:context         (or (System/getenv "DEVC_CONTEXT")         (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].name}'") :out))
+                   :namespace       (or (System/getenv "DEVC_NAMESPACE")       (-> (p/shell {:out :string} "kubectl config view --minify -o jsonpath='{.contexts[0].context.namespace}'") :out))
+                   :image           (or (System/getenv "DEVC_IMAGE")           "jarppe/clj-devcontainer:latest")
+                   :pod             (or (System/getenv "DEVC_POD_NAME")        user)
+                   :requests-memory (or (System/getenv "DEVC_REQUESTS_MEMORY") "1Gi")
+                   :requests-cpu    (or (System/getenv "DEVC_REQUESTS_CPU")    "500m")
+                   :limits-memory   (or (System/getenv "DEVC_LIMITS_MEMORY")   "4Gi")
+                   :limits-cpu      (or (System/getenv "DEVC_LIMITS_CPU")      "4000m")
+                   :volumes         (System/getenv "DEVC_VOLUMES")})
 
 
 (def cli-spec
@@ -39,15 +40,15 @@
               :namespace       {:desc    "Kube namespace (default from kubectl config)"
                                 :alias   :ns
                                 :default (:namespace default-opts)}
-              :pod             {:desc    "Devcontainer pod name ($CLJ_DEVCONTAINER_POD_NAME or username)"
+              :pod             {:desc    "Devcontainer pod name ($DEVC_POD_NAME or current user name)"
                                 :alias   :pod
                                 :default (:pod default-opts)}
-              :image           {:desc    "Devcontainer image ($CLJ_DEVCONTAINER_IMAGE or \"jarppe/clj-devcontainer:latest\")"
-                                :coerce  :string
+              :image           {:desc    "Devcontainer image ($DEVC_IMAGE or \"jarppe/clj-devcontainer:latest\")"
                                 :alias   :i
                                 :default (:image default-opts)}
-              :volume          {:desc  "Mount volume to devcontainer, i.e. pvc:some-pvc-name:/mnt/data"
-                                :alias :v}
+              :volumes         {:desc    "Comma separated list of volumes to mount on devcontainer, i.e. pvc:some-pvc-name:/mnt/data"
+                                :alias   :v
+                                :default (:volumes default-opts)}
               :requests-memory {:desc    "Pod memory request"
                                 :default (:requests-memory default-opts)}
               :requests-cpu    {:desc    "Pod CPU request"
@@ -92,14 +93,16 @@
       (exit)))
 
 
-(defn volume-info [{:keys [volume]}]
-  (when volume
-    (zipmap [:type :name :mount :opts]
-            (str/split volume #":"))))
+(defn volume-info [{:keys [volumes]}]
+  (when volumes
+    (map (fn [v]
+           (zipmap [:type :name :mount :opts]
+                   (str/split v #":")))
+         (str/split volumes #","))))
 
 
 (defn up [{:keys [opts]}]
-  (let [volume    (volume-info opts)
+  (let [volumes   (volume-info opts)
         overrides {:apiVersion "v1"
                    :spec       {:containers [{:name         (:pod opts)
                                               :image        (:image opts)
@@ -114,21 +117,27 @@
                                                               :value (:namespace opts)}
                                                              {:name  "POD_NAME"
                                                               :value (:pod opts)}]
-                                              :volumeMounts (when volume
-                                                              [{:name      (:name volume)
-                                                                :mountPath (:mount volume)
-                                                                :readOnly  (if (= (:opts volume) "ro") true false)}])}]
-                                :volumes    (when volume
-                                              (case (:type volume)
-                                                "pvc" [{:name                  (:name volume)
-                                                        :persistentVolumeClaim {:claimName (:name volume)}}]
-                                                (do (println "unknown volume type:" (pr-str (:type volume)))
-                                                    (exit 1))))}}]
+                                              :volumeMounts (map (fn [volume]
+                                                                   {:name      (:name volume)
+                                                                    :mountPath (:mount volume)
+                                                                    :readOnly  (case (:opts volume)
+                                                                                 ("ro" nil) true
+                                                                                 "rw" false
+                                                                                 (do (println "unknown volume option:" (pr-str (:opts volume)))
+                                                                                     (exit 1)))})
+                                                                 volumes)}]
+                                :volumes    (map (fn [volume]
+                                                   (case (:type volume)
+                                                     "pvc" {:name                  (:name volume)
+                                                            :persistentVolumeClaim {:claimName (:name volume)}}
+                                                     (do (println "unknown volume type:" (pr-str (:type volume)))
+                                                         (exit 1))))
+                                                 volumes)}}]
     (kubectl "run" [(:pod opts)
-                    (str "--context=" (:context opts))
+                    (str "--context="   (:context opts))
                     (str "--namespace=" (:namespace opts))
-                    (str "--labels=" labels)
-                    (str "--image=" (:image opts))
+                    (str "--labels="    labels)
+                    (str "--image="     (:image opts))
                     (str "--overrides=" (json/generate-string overrides))
                     "--restart=Never"])))
 
@@ -137,7 +146,7 @@
   (kubectl "delete" ["pod"
                      (or (first args)
                          (str "--selector=" labels))
-                     (str "--context=" (:context opts))
+                     (str "--context="   (:context opts))
                      (str "--namespace=" (:namespace opts))]))
 
   
@@ -145,16 +154,17 @@
   (kubectl "get" ["pod"
                   (or (first args)
                       (str "--selector=" labels))
-                  (str "--context=" (:context opts))
+                  (str "--context="   (:context opts))
                   (str "--namespace=" (:namespace opts))]))
 
 
 (defn sh [{:keys [opts args]}] 
   (kubectl "exec" [(:pod opts)
-                   (str "--context=" (:context opts))
-                   (str "--namespace=" (:namespace opts)) 
-                   (str "--container=" (:pod opts)) 
-                   (when-not args ["--stdin" "--tty"])
+                   (str "--context="   (:context opts))
+                   (str "--namespace=" (:namespace opts))
+                   (str "--container=" (:pod opts))
+                   "--stdin"
+                   (when-not args "--tty")
                    "--"
                    (or args ["zsh" "-l"])]))
 
@@ -193,4 +203,13 @@
   (ps {})
   (down {})
   ;
+
+  (println "java.nio.file.AccessDeniedException: /mnt/indexes/postcode-latlon.2025-06-26-11-18-33.ndx.temp\n\tat java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixEx │
+│ ception.rethrowAsIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixFileSystemProvider.newFileChannel(Unknown Source)\n\tat java.base/java.nio.channels.FileChannel.open(Unknown Source)\n\tat lemonpi.index.interface.file_channel$file_channel.invokeStatic(file_channel.clj:21)\n\tat lemonpi.index.interface.file_channel$file_channel.invok │
+│ e(file_channel.clj:17)\n\tat lemonpi.index.interface.algo.hamt_v1$write_index.invokeStatic(hamt_v1.clj:339)\n\tat lemonpi.index.interface.algo.hamt_v1$write_index.invoke(hamt_v1.clj:230)\n\tat lemonpi.index_updater.index.postcodes$write_postcodes_index.invokeStatic(postcodes.clj:50)\n\tat lemonpi.index_updater.index.postcodes$write_postcodes_index.invoke(postcodes.clj:49)\n\tat lemonpi.index_updater.index.postcodes$upd │
+│ ate_index.invokeStatic(postcodes.clj:87)\n\tat lemonpi.index_updater.index.postcodes$update_index.invoke(postcodes.clj:74)\n\tat clojure.lang.Var.invoke(Var.java:386)\n\tat lemonpi.index_updater.main$run_task.invokeStatic(main.clj:25)\n\tat lemonpi.index_updater.main$run_task.invoke(main.clj:19)\n\tat clojure.core$partial$fn__5927.invoke(core.clj:2641)\n\tat clojure.core$map$fn__5954.invoke(core.clj:2770)\n\tat clojure │
+│ .lang.LazySeq.force(LazySeq.java:50)\n\tat clojure.lang.LazySeq.realize(LazySeq.java:89)\n\tat clojure.lang.LazySeq.seq(LazySeq.java:106)\n\tat clojure.lang.RT.seq(RT.java:555)\n\tat clojure.core$seq__5486.invokeStatic(core.clj:139)\n\tat clojure.core$every_QMARK_.invokeStatic(core.clj:2696)\n\tat clojure.core$every_QMARK_.invoke(core.clj:2689)\n\tat lemonpi.index_updater.main$run_tasks.invokeStatic(main.clj:36)\n\tat  │
+│ lemonpi.index_updater.main$run_tasks.invoke(main.clj:33)\n\tat lemonpi.index_updater.main$_main$fn__10112.invoke(main.clj:44)\n\tat lemonpi.index_updater.main$_main.invokeStatic(main.clj:43)\n\tat lemonpi.index_updater.main$_main.doInvoke(main.clj:39)\n\tat clojure.lang.RestFn.invoke(RestFn.java:400)\n\tat clojure.lang.AFn.applyToHelper(AFn.java:152)\n\tat clojure.lang.RestFn.applyTo(RestFn.java:135)\n\tat lemonpi.inde │
+│ x_updater.main.main(Unknown Source)\n")
+
   )
