@@ -131,6 +131,15 @@ COPY  install-scripts/*  /usr/local/bin
 
 
 #
+# Common envs:
+#
+
+
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+
+#
 # Entrypoint and command:
 #
 
