@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ZIGVER=$1
+if [[ -z "${ZIGVER}" ]]; then
+  ZIGVER=0.14.1
+fi
+
+
+mkdir /usr/local/zig
+ARCH=$(uname -m)
+curl -sSLf "https://ziglang.org/download/$ZIGVER/zig-$ARCH-linux-$ZIGVER.tar.xz" \
+  | tar --strip-components=1  \
+        -C /usr/local/zig     \
+        -xJf -
+
+/usr/local/zig/zig version

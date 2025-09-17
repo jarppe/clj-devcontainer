@@ -110,7 +110,8 @@ RUN \
     direnv                                                                         \
     httpie                                                                         \
     rlwrap                                                                         \
-    silversearcher-ag                                                              && \
+    silversearcher-ag                                                              \
+    xz-utils                                                                       && \
   ln -s /usr/bin/batcat /usr/local/bin/bat
 
 
