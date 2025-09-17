@@ -2,7 +2,7 @@
 
 ZIGVER=$1
 if [[ -z "${ZIGVER}" ]]; then
-  ZIGVER=0.14.1
+  ZIGVER=0.15.1
 fi
 
 
@@ -13,4 +13,7 @@ curl -sSLf "https://ziglang.org/download/$ZIGVER/zig-$ARCH-linux-$ZIGVER.tar.xz"
         -C /usr/local/zig     \
         -xJf -
 
-/usr/local/zig/zig version
+ln -s /usr/local/zig/zig /usr/local/bin/zig
+
+echo -n "Installed zig version "
+zig version
