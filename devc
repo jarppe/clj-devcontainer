@@ -149,7 +149,7 @@
                      (str "--context="   (:context opts))
                      (str "--namespace=" (:namespace opts))]))
 
-  
+
 (defn ps [{:keys [opts args]}]
   (kubectl "get" ["pod"
                   (or (first args)
@@ -158,7 +158,7 @@
                   (str "--namespace=" (:namespace opts))]))
 
 
-(defn sh [{:keys [opts args]}] 
+(defn sh [{:keys [opts args]}]
   (kubectl "exec" [(:pod opts)
                    (str "--context="   (:context opts))
                    (str "--namespace=" (:namespace opts))
@@ -203,13 +203,4 @@
   (ps {})
   (down {})
   ;
-
-  (println "java.nio.file.AccessDeniedException: /mnt/indexes/postcode-latlon.2025-06-26-11-18-33.ndx.temp\n\tat java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixEx │
-│ ception.rethrowAsIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)\n\tat java.base/sun.nio.fs.UnixFileSystemProvider.newFileChannel(Unknown Source)\n\tat java.base/java.nio.channels.FileChannel.open(Unknown Source)\n\tat lemonpi.index.interface.file_channel$file_channel.invokeStatic(file_channel.clj:21)\n\tat lemonpi.index.interface.file_channel$file_channel.invok │
-│ e(file_channel.clj:17)\n\tat lemonpi.index.interface.algo.hamt_v1$write_index.invokeStatic(hamt_v1.clj:339)\n\tat lemonpi.index.interface.algo.hamt_v1$write_index.invoke(hamt_v1.clj:230)\n\tat lemonpi.index_updater.index.postcodes$write_postcodes_index.invokeStatic(postcodes.clj:50)\n\tat lemonpi.index_updater.index.postcodes$write_postcodes_index.invoke(postcodes.clj:49)\n\tat lemonpi.index_updater.index.postcodes$upd │
-│ ate_index.invokeStatic(postcodes.clj:87)\n\tat lemonpi.index_updater.index.postcodes$update_index.invoke(postcodes.clj:74)\n\tat clojure.lang.Var.invoke(Var.java:386)\n\tat lemonpi.index_updater.main$run_task.invokeStatic(main.clj:25)\n\tat lemonpi.index_updater.main$run_task.invoke(main.clj:19)\n\tat clojure.core$partial$fn__5927.invoke(core.clj:2641)\n\tat clojure.core$map$fn__5954.invoke(core.clj:2770)\n\tat clojure │
-│ .lang.LazySeq.force(LazySeq.java:50)\n\tat clojure.lang.LazySeq.realize(LazySeq.java:89)\n\tat clojure.lang.LazySeq.seq(LazySeq.java:106)\n\tat clojure.lang.RT.seq(RT.java:555)\n\tat clojure.core$seq__5486.invokeStatic(core.clj:139)\n\tat clojure.core$every_QMARK_.invokeStatic(core.clj:2696)\n\tat clojure.core$every_QMARK_.invoke(core.clj:2689)\n\tat lemonpi.index_updater.main$run_tasks.invokeStatic(main.clj:36)\n\tat  │
-│ lemonpi.index_updater.main$run_tasks.invoke(main.clj:33)\n\tat lemonpi.index_updater.main$_main$fn__10112.invoke(main.clj:44)\n\tat lemonpi.index_updater.main$_main.invokeStatic(main.clj:43)\n\tat lemonpi.index_updater.main$_main.doInvoke(main.clj:39)\n\tat clojure.lang.RestFn.invoke(RestFn.java:400)\n\tat clojure.lang.AFn.applyToHelper(AFn.java:152)\n\tat clojure.lang.RestFn.applyTo(RestFn.java:135)\n\tat lemonpi.inde │
-│ x_updater.main.main(Unknown Source)\n")
-
   )
