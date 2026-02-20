@@ -64,12 +64,12 @@ RUN \
 
 
 #
-# Babashka:
+# Babashka and bbin:
 #
 
 
 RUN \
-  RELEASE=$(curl -sSLf "https://api.github.com/repos/babashka/babashka/releases/latest" | jq -r ".tag_name[1:]")                         && \
+  RELEASE=$(curl -sSLf "https://api.github.com/repos/babashka/babashka/releases/latest" | jq -r ".tag_name[1:]") && \
   case ${TARGETARCH} in                                                            \
     arm64) ARCH=aarch64;;                                                          \
     amd64) ARCH=amd64;;                                                            \
@@ -79,6 +79,13 @@ RUN \
     | tar xzCf /usr/local/bin -                                                    && \
   bb --version
 
+
+RUN \
+  RELEASE=$(curl -sSLf https://api.github.com/repos/babashka/bbin/tags | jq -r ".[].name" | head -n1) && \
+  curl -sSLf "https://raw.githubusercontent.com/babashka/bbin/${RELEASE}/bbin"     \
+    > /usr/local/bin/bbin                                                          && \
+  chmod +x /usr/local/bin/bbin                                                     && \
+  bbin --version
 
 #
 # fzf - The debian package for fzf is very old
