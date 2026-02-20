@@ -1,3 +1,4 @@
+export PATH=$HOME/.local/bin:$PATH
 export TERM=xterm-256color
 export EDITOR=vim
 export PAGER=less
