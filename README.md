@@ -4,15 +4,19 @@ This repository builds a [devcontainer](https://containers.dev/) image for [Cloj
 
 The image tag is `jarppe/clj-devcontainer:latest` and is built for `linux/arm64` and `linux/adm64` targets.
 
-To keep the image size in reasonable small, the image does not contain all tools I use. Instead the image has installation scripts to install the tools, like:
+To keep the image size in reasonable small, the image does not contain all the tools I use. Instead the image has installation scripts to install the tools, like:
 
-- Babashka
+- NodeJS
+- Bun
 - Docker CLI
 - kubectl and krew
-- Helm
-- PostgreSQL CLI (version 17)
+- PostgreSQL CLI
 - Redis CLI
 - K6
+- Claude Code
+- OpenAI codex
+- Gemini CLI
+- Zig
 
 For example, to install postgres CLI, run this in devcontainer shell:
 

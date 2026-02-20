@@ -2,7 +2,7 @@
 
 POSTGRES_VERSION=$1
 if [[ -z "${POSTGRES_VERSION}" ]]; then
-  POSTGRES_VERSION=17
+  POSTGRES_VERSION=18
 fi
 
 mkdir -p /usr/share/postgresql

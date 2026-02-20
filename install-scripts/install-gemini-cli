@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Install Gemini cli..."
+npm install -g @google/gemini-cli

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Install OpenAI codex..."
+npm i -g @openai/codex

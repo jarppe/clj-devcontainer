@@ -59,7 +59,7 @@ RUN \
 
 RUN \
   RELEASE=$(curl -sSLf "https://api.github.com/repos/clojure/brew-install/releases/latest" | jq -r ".tag_name")  && \
-  curl -sSLf https://github.com/clojure/brew-install/releases/download/${RELEASE}/posix-install.sh               \
+  curl -sSLf https://github.com/clojure/brew-install/releases/download/${RELEASE}/linux-install.sh               \
     | bash -
 
 
@@ -92,6 +92,15 @@ RUN \
 
 
 #
+# Download clojure core libs and Calva requirements:
+#
+
+
+RUN \
+  clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.5.1"} cider/cider-nrepl {:mvn/version "0.58.0"}}}' -P
+
+
+#
 # Misc utils:
 #
 
@@ -111,24 +120,19 @@ RUN \
     httpie                                                                         \
     rlwrap                                                                         \
     silversearcher-ag                                                              \
-    xz-utils                                                                       && \
-  ln -s /usr/bin/batcat /usr/local/bin/bat
+    xz-utils                                                                       \
+    socat                                                                          \
+    ripgrep                                                                        \
+    eza
 
 
-#
-# Download clojure core libs and Calva requirements:
-#
+# Install dotfiles and installation helpers:
 
 
-RUN \
-  clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.1"} cider/cider-nrepl {:mvn/version "0.55.4"}}}' -P
-
-
-# In stall dotfiles and installation helpers:
-
-
-COPY  dotfiles/*         /root
-COPY  install-scripts/*  /usr/local/bin
+COPY  --parents \
+  ./dotfiles/./*      /root/
+COPY  \
+  install-scripts/*  /usr/local/bin/
 
 
 #

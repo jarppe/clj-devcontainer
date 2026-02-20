@@ -1,4 +1,10 @@
 #
+# Path:
+#
+
+export PATH=$HOME/.local/bin:$PATH
+
+#
 # zsh stuff:
 #
 
@@ -72,12 +78,17 @@ fi
 # Common aliases:
 #
 
-alias l='ls -F'
-alias ll='ls -Fl'
-alias lll='ls -Fla'
+alias l='eza'
+alias ll='eza -l'
+alias lll='eza -la'
+alias bat=batcat
+alias fd=fdfind
+alias lg=lazygit
 alias m='bat -p'
-alias k=kubectl
+alias agc='ag -U --clojure'
 alias d=docker
 alias dc='docker compose'
-alias lg=lazygit
-alias agc='ag -U --clojure'
+alias drun='docker run --rm -it'
+alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
+alias k=kubectl
+alias ccc='claude --dangerously-skip-permissions'

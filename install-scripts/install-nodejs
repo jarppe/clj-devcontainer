@@ -1,0 +1,13 @@
+#!/bin/bash
+
+NODEJS_VERSION=$1
+if [[ -z "${NODEJS_VERSION}" ]]; then
+  NODEJS_VERSION=22
+fi
+
+curl -sSLf https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash -
+apt update -q
+apt install -y nodejs
+
+node --version
+npm --version
