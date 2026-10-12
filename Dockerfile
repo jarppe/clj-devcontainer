@@ -36,7 +36,7 @@ RUN \
 #
 
 
-ARG JAVA_VERSION=25
+ARG JAVA_VERSION=27
 
 RUN \
   echo "Installing Java $JAVA_VERSION..."                                          && \
