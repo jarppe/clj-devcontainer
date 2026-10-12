@@ -130,7 +130,8 @@ RUN \
     xz-utils                                                                       \
     socat                                                                          \
     ripgrep                                                                        \
-    eza
+    eza                                                                            \
+    less
 
 
 # Install dotfiles and installation helpers:
